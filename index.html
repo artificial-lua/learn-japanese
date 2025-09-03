@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>일본어 배우자</title>
+    <link rel="stylesheet" href="theme.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-wrap">
+            <span id="elapsed" class="timer" aria-live="polite" aria-label="경과 시간">00:00</span>
+            <div class="script-select" role="group" aria-label="문자 세트 선택">
+              <button id="script-toggle" class="script-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="script-label script-toggle" style="padding-left:20px">
+                    <span class="chevron" aria-hidden="true">▾</span>
+                    <span id="script-label" class="visually-hidden">문자 세트</span>
+                    <span class="script-value" data-value="hiragana">히라가나</span>
+                </button>
+                <ul id="script-list" class="script-list" role="listbox" aria-labelledby="script-label" tabindex="-1" hidden>
+                    <li role="option" data-value="hiragana" aria-selected="true" tabindex="-1">히라가나</li>
+                </ul>
+            </div>
+            <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="테마 전환">
+                <span class="icon sun" aria-hidden="true">☀️</span>
+                <span class="icon moon" aria-hidden="true">🌙</span>
+                <span class="visually-hidden">Theme</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="game" id="app">
+        <!-- 상단: 문제용 큰 정사각형 카드 -->
+        <button class="prompt card square" id="prompt" aria-label="문제">
+            <span class="prompt-text" id="question-char" aria-live="polite">준비</span>
+        </button>
+
+        <!-- 하단: 선택지 4개의 정사각형 카드 -->
+        <section class="options" aria-label="선택지">
+            <button class="option card square" data-index="0" type="button">
+                <span class="option-text"></span>
+            </button>
+            <button class="option card square" data-index="1" type="button">
+                <span class="option-text"></span>
+            </button>
+            <button class="option card square" data-index="2" type="button">
+                <span class="option-text"></span>
+            </button>
+            <button class="option card square" data-index="3" type="button">
+                <span class="option-text"></span>
+            </button>
+        </section>
+    </main>
+
+    <footer class="bottombar" aria-label="통계">
+        <div class="bottombar-wrap">
+            <div class="stat">
+                <div class="stat-head">
+                    <span class="stat-label">정답률</span>
+                    <span id="accuracy-text" class="stat-value" aria-live="polite">0%</span>
+                </div>
+                <div class="progress" role="progressbar" aria-label="정답률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div id="accuracy-fill" class="progress-fill" style="width:0%"></div>
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-head">
+                    <span class="stat-label">평균 대비 시간</span>
+                    <span id="time-text" class="stat-value" aria-live="polite">–</span>
+                </div>
+                <div class="progress" role="progressbar" aria-label="평균 대비 시간" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div id="time-fill" class="progress-fill alt" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
