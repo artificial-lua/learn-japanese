@@ -642,9 +642,36 @@ const ganaStorage = {
             ]
         },
         "title": "히라가나"
+    },
+    katakana: {
     }
 };
 ganaStorage.hiragana.gana.length = Object.keys(ganaStorage.hiragana.gana).length;
+
+// Build Katakana dataset from Hiragana definitions for parity
+(function () {
+    function hiraToKata(str) {
+        return String(str).replace(/[ぁ-ゖゝゞ]/g, function (ch) {
+            return String.fromCharCode(ch.charCodeAt(0) + 0x60);
+        });
+    }
+    var hira = ganaStorage.hiragana;
+    var kataGana = {};
+    Object.keys(hira.gana).forEach(function (key) {
+        if (key === 'length') return;
+        console.log(key, hiraToKata(key), hira.gana[key]);
+        var kataKey = hiraToKata(key);
+        kataGana[kataKey] = hira.gana[key]?.slice();
+    });
+    var kataSound = {};
+    Object.keys(hira.sound).forEach(function (kr) {
+        kataSound[kr] = hira.sound[kr].map(function (kana) { return hiraToKata(kana); });
+    });
+    ganaStorage.katakana.gana = kataGana;
+    ganaStorage.katakana.sound = kataSound;
+    ganaStorage.katakana.title = '가타카나';
+    ganaStorage.katakana.gana.length = Object.keys(ganaStorage.katakana.gana).length;
+})();
 let currentScriptMode = 'hiragana';
 function getScriptMode() { return currentScriptMode; }
 function getHiraganaData() { return ganaStorage.hiragana; }
@@ -1018,9 +1045,9 @@ function getRandomQuestion() {
         case 'hiragana':
             currentStorage = ganaStorage.hiragana
             break;
-        // case 'katakana':
-        //     currentStorage = ganaStorage.katakana
-        //     break;
+        case 'katakana':
+            currentStorage = ganaStorage.katakana
+            break;
     }
     const randomIndex = Math.floor(Math.random() * currentStorage.gana.length);
     const answer = Object.keys(currentStorage.gana)[randomIndex];
