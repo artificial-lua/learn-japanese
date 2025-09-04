@@ -34,6 +34,12 @@
         <!-- 상단: 문제용 큰 정사각형 카드 -->
         <button class="prompt card square" id="prompt" aria-label="문제">
             <span class="prompt-text" id="question-char" aria-live="polite">준비</span>
+            <!-- Appears after a correct answer -->
+            <span class="next-arrow" aria-hidden="true" title="다음">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                    <path d="M5 12h12M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
         </button>
 
         <!-- 하단: 선택지 4개의 정사각형 카드 -->

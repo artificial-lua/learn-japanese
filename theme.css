@@ -87,6 +87,45 @@ body {
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
 }
 
+/* Right arrow hint shown after correct answer */
+.prompt .next-arrow {
+  position: absolute;
+  right: clamp(8px, 1.6vmin, 16px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 200ms ease;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25));
+}
+
+/* Make the arrow icon larger */
+.prompt .next-arrow svg {
+  width: 40px;
+  height: 40px;
+}
+
+.prompt.correct .next-arrow,
+.prompt.wrong .next-arrow {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+  color: #ffffff; /* better contrast on green background */
+}
+
+/* Make the arrow much larger and bolder */
+.prompt .next-arrow svg {
+  width: clamp(56px, 10vmin, 96px);
+  height: clamp(56px, 10vmin, 96px);
+}
+
+.prompt .next-arrow svg path {
+  stroke-width: 2.75;
+}
+
 /* Options grid */
 .options {
   display: grid;
