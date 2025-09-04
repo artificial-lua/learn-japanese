@@ -943,41 +943,41 @@ answerButtons.forEach((btn) => {
 
         if (state !== 'question') return;
 
-        if (btn.classList.contains('select')) {
-            if (correctSound.includes(selected)) {
-                btn.classList.remove('select');
-                btn.classList.add('correct');
-                state = 'answered';
-                timerApiGlobal.stop();
-                promptBox.classList.add('ready');
-                history.correctAnswers.push(true);
-                history.times.push(timerApiGlobal.getTime());
-            } else {
-                btn.classList.remove('select');
-                answerButtons.forEach((b) => {
-                    const buttonSound = b.textContent.replaceAll('\n', '').trim();
-                    if (correctSound.includes(buttonSound)) {
-                        b.classList.add('correct');
-                    }
-                });
-                state = 'answered';
-                timerApiGlobal.stop();
-                promptBox.classList.add('ready');
-                btn.classList.add('wrong');
-                history.correctAnswers.push(false);
-                history.times.push(timerApiGlobal.getTime());
-            }
-            if (history.correctAnswers.length > 100) {
-                history.correctAnswers.shift();
-                history.times.shift();
-            }
-            window.localStorage.setItem('learnjp-history', JSON.stringify(history));
-            console.log('History:', history);
-            updateStatsBars();
+        // if (btn.classList.contains('select')) {
+        if (correctSound.includes(selected)) {
+            btn.classList.remove('select');
+            btn.classList.add('correct');
+            state = 'answered';
+            timerApiGlobal.stop();
+            promptBox.classList.add('correct');
+            history.correctAnswers.push(true);
+            history.times.push(timerApiGlobal.getTime());
         } else {
-            clearAnswerButtons();
-            btn.classList.add('select');
+            btn.classList.remove('select');
+            answerButtons.forEach((b) => {
+                const buttonSound = b.textContent.replaceAll('\n', '').trim();
+                if (correctSound.includes(buttonSound)) {
+                    b.classList.add('correct');
+                }
+            });
+            state = 'answered';
+            timerApiGlobal.stop();
+            promptBox.classList.add('wrong');
+            btn.classList.add('wrong');
+            history.correctAnswers.push(false);
+            history.times.push(timerApiGlobal.getTime());
         }
+        if (history.correctAnswers.length > 100) {
+            history.correctAnswers.shift();
+            history.times.shift();
+        }
+        window.localStorage.setItem('learnjp-history', JSON.stringify(history));
+        console.log('History:', history);
+        updateStatsBars();
+        // } else {
+        //     clearAnswerButtons();
+        //     btn.classList.add('select');
+        // }
     });
 });
 
@@ -993,7 +993,7 @@ function setOptionCharacter(values) {
 
 function setQuestionText(text) {
     questionChar.textContent = text;
-    promptBox.classList.remove('ready');
+    promptBox.classList.remove('ready', 'correct', 'wrong');
 }
 
 function shuffleArray(array) {
