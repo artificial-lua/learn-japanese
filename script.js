@@ -3,6 +3,7 @@
 // Storage keys
 const THEME_KEY = "learnjp-theme";
 const SCRIPT_KEY = "learnjp-script";
+const INPUT_MODE_KEY = "learnjp-input-mode"; // 'options' | 'typing'
 
 // App-level globals (file-scope)
 const ganaStorage = {
@@ -679,11 +680,28 @@ let timerApiGlobal = null;
 function getTimer() { return timerApiGlobal; }
 
 let state = 'loading';
+let advanceArmed = false; // In typing mode, require a second, separate Enter to advance
 
 const promptBox = document.getElementById('prompt');
 const questionChar = document.getElementById('question-char');
 const answerBoxes = document.querySelectorAll('.options .option .option-text');
 const answerButtons = document.querySelectorAll('.option');
+const optionsSection = document.querySelector('section.options[aria-label="선택지"]');
+const typingSection = document.getElementById('typing-section');
+const typingInput = document.getElementById('typing-input');
+
+let inputMode = 'options';
+function getInputMode() { return inputMode; }
+
+function applyInputMode(mode) {
+    inputMode = (mode === 'typing') ? 'typing' : 'options';
+    if (optionsSection) optionsSection.classList.toggle('hidden', inputMode !== 'options');
+    if (typingSection) typingSection.classList.toggle('hidden', inputMode !== 'typing');
+    if (inputMode === 'typing' && typingInput) {
+        typingInput.value = '';
+        setTimeout(() => typingInput.focus({ preventScroll: true }), 0);
+    }
+}
 // Stats bar elements
 const accFillEl = document.getElementById('accuracy-fill');
 const accTextEl = document.getElementById('accuracy-text');
@@ -960,52 +978,96 @@ function clearAnswerButtons() {
     answerButtons.forEach((b) => b.classList.remove('select', 'correct', 'wrong'))
 }
 
-answerButtons.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+function answerEvent(input) {
+    return (e) => {
         e.preventDefault();
-        const selected = btn.textContent.replaceAll('\n', '').trim();;
-        const currentStorage = ganaStorage[currentScriptMode];
-        const correctAnswer = questionChar.textContent
-        const correctSound = currentStorage.gana[correctAnswer];
+        if (inputMode === 'options') {
+            const selected = input.textContent.replaceAll('\n', '').trim();
+            const currentStorage = ganaStorage[currentScriptMode];
+            const correctAnswer = questionChar.textContent
+            const correctSound = currentStorage.gana[correctAnswer];
 
-        if (state !== 'question') return;
+            if (state !== 'question') return;
 
-        // if (btn.classList.contains('select')) {
-        if (correctSound.includes(selected)) {
-            btn.classList.remove('select');
-            btn.classList.add('correct');
-            state = 'answered';
-            timerApiGlobal.stop();
-            promptBox.classList.add('correct');
-            history.correctAnswers.push(true);
-            history.times.push(timerApiGlobal.getTime());
-        } else {
-            btn.classList.remove('select');
-            answerButtons.forEach((b) => {
-                const buttonSound = b.textContent.replaceAll('\n', '').trim();
-                if (correctSound.includes(buttonSound)) {
-                    b.classList.add('correct');
-                }
-            });
-            state = 'answered';
-            timerApiGlobal.stop();
-            promptBox.classList.add('wrong');
-            btn.classList.add('wrong');
-            history.correctAnswers.push(false);
-            history.times.push(timerApiGlobal.getTime());
+            // if (btn.classList.contains('select')) {
+            if (correctSound.includes(selected)) {
+                input.classList.remove('select');
+                input.classList.add('correct');
+                state = 'answered';
+                timerApiGlobal.stop();
+                promptBox.classList.add('correct');
+                history.correctAnswers.push(true);
+                history.times.push(timerApiGlobal.getTime());
+            } else {
+                input.classList.remove('select');
+                answerButtons.forEach((b) => {
+                    const buttonSound = b.textContent.replaceAll('\n', '').trim();
+                    if (correctSound.includes(buttonSound)) {
+                        b.classList.add('correct');
+                    }
+                });
+                state = 'answered';
+                timerApiGlobal.stop();
+                promptBox.classList.add('wrong');
+                input.classList.add('wrong');
+                history.correctAnswers.push(false);
+                history.times.push(timerApiGlobal.getTime());
+            }
+            if (history.correctAnswers.length > 100) {
+                history.correctAnswers.shift();
+                history.times.shift();
+            }
+            window.localStorage.setItem('learnjp-history', JSON.stringify(history));
+            console.log('History:', history);
+            updateStatsBars();
         }
-        if (history.correctAnswers.length > 100) {
-            history.correctAnswers.shift();
-            history.times.shift();
-        }
-        window.localStorage.setItem('learnjp-history', JSON.stringify(history));
-        console.log('History:', history);
-        updateStatsBars();
-        // } else {
-        //     clearAnswerButtons();
-        //     btn.classList.add('select');
+        // else if (inputMode === 'typing') {
+        //     // is input not enter, use default action
+        //     if (e.key !== 'Enter') {
+        //         // If Escape is pressed, clear the input
+        //         if (e.key === 'Escape' && typingInput) {
+        //             typingInput.value = '';
+        //         }
+        //         return;
+        //     };
+        //     if (state === 'question') {
+        //         const answer = input.value.replaceAll('\n', '').trim();
+        //         const currentStorage = ganaStorage[currentScriptMode];
+        //         const correctAnswer = questionChar.textContent
+        //         const correctSound = currentStorage.gana[correctAnswer];
+
+        //         if (correctSound.includes(answer)) {
+        //             state = 'answered';
+        //             timerApiGlobal.stop();
+        //             promptBox.classList.add('correct');
+        //             history.correctAnswers.push(true);
+        //             history.times.push(timerApiGlobal.getTime());
+        //         }
+        //         else {
+        //             state = 'answered';
+        //             timerApiGlobal.stop();
+        //             promptBox.classList.add('wrong');
+        //             history.correctAnswers.push(false);
+        //             history.times.push(timerApiGlobal.getTime());
+        //         }
+        //         if (history.correctAnswers.length > 100) {
+        //             history.correctAnswers.shift();
+        //             history.times.shift();
+        //         }
+        //         window.localStorage.setItem('learnjp-history', JSON.stringify(history));
+        //         console.log('History:', history);
+        //         updateStatsBars();
+        //         advanceArmed = true;
+        //     } else if (state === 'answered' && advanceArmed) {
+        //         getRandomQuestion();
+        //         advanceArmed = false;
+        //     }
         // }
-    });
+    }
+}
+
+answerButtons.forEach((btn) => {
+    btn.addEventListener('click', answerEvent(btn));
 });
 
 // Set option texts to 1, 2, 3, 4 and expose helper
@@ -1087,9 +1149,14 @@ function boot() {
     var win = window;
     var storage = window.localStorage;
 
-    // Theme
+    // Theme (moved into settings modal)
     var mm = function (q) { return (win.matchMedia && win.matchMedia(q).matches); };
-    initThemeToggle(doc, storage, mm, THEME_KEY);
+    var root = doc.documentElement;
+    var storedTheme = storage.getItem(THEME_KEY);
+    var initialTheme = (storedTheme === 'light' || storedTheme === 'dark')
+        ? storedTheme
+        : (mm('(prefers-color-scheme: light)') ? 'light' : 'dark');
+    applyTheme(root, null, initialTheme);
 
     // Timer
     var timerApi = createTimer(
@@ -1102,17 +1169,67 @@ function boot() {
         timerApiGlobal = timerApi;
     }
 
-    // Dropdown
-    initScriptDropdown(
-        doc.querySelector('.script-select'),
-        doc.getElementById('script-toggle'),
-        doc.getElementById('script-list'),
-        doc.querySelector('.script-select .script-value'),
-        storage,
-        SCRIPT_KEY,
-        win,
-        doc
-    );
+    // Script mode init from storage (moved to settings)
+    var storedScript = storage.getItem(SCRIPT_KEY);
+    if (storedScript === 'hiragana' || storedScript === 'katakana') {
+        currentScriptMode = storedScript;
+    }
+
+    // Settings modal wiring
+    (function initSettingsModal() {
+        var openBtn = doc.getElementById('settings-toggle');
+        var modal = doc.getElementById('config');
+        if (!modal || !openBtn) return;
+        var overlay = modal.querySelector('.config-overlay');
+        var form = doc.getElementById('config-form');
+        var scriptSel = doc.getElementById('script');
+        var themeSel = doc.getElementById('theme');
+        var inputModeSel = doc.getElementById('input-mode');
+
+        function open() { modal.classList.remove('hidden'); }
+        function close() { modal.classList.add('hidden'); }
+
+        openBtn.addEventListener('click', open);
+        if (overlay) overlay.addEventListener('click', close);
+        doc.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+        });
+
+        // Initialize form values
+        try {
+            if (scriptSel) scriptSel.value = currentScriptMode;
+            if (themeSel) themeSel.value = (root.dataset.theme === 'light') ? 'light' : 'dark';
+            var storedMode = storage.getItem(INPUT_MODE_KEY);
+            if (storedMode !== 'options' && storedMode !== 'typing') storedMode = 'options';
+            if (inputModeSel) inputModeSel.value = storedMode;
+            applyInputMode(storedMode);
+        } catch (_) { }
+
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                try {
+                    var selectedScript = scriptSel ? String(scriptSel.value) : 'hiragana';
+                    var selectedTheme = themeSel ? String(themeSel.value) : initialTheme;
+                    var selectedMode = inputModeSel ? String(inputModeSel.value) : 'options';
+                    if (selectedScript === 'hiragana' || selectedScript === 'katakana') {
+                        currentScriptMode = selectedScript;
+                        storage.setItem(SCRIPT_KEY, currentScriptMode);
+                    }
+                    if (selectedTheme === 'light' || selectedTheme === 'dark') {
+                        applyTheme(root, null, selectedTheme);
+                        storage.setItem(THEME_KEY, selectedTheme);
+                    }
+                    if (selectedMode === 'options' || selectedMode === 'typing') {
+                        storage.setItem(INPUT_MODE_KEY, selectedMode);
+                        applyInputMode(selectedMode);
+                    }
+                } catch (_) { }
+                close();
+                ready();
+            });
+        }
+    })();
 
     ready()
     // Initialize stats bars from stored history

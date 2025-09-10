@@ -27,6 +27,14 @@
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
   /* subtle hover bg for ghost buttons (dark default) */
   --hover-ghost: rgba(148, 163, 184, 0.15);
+
+  /* Aliases used by config/settings UI (map to existing tokens) */
+  --bg-primary: var(--bg-soft);
+  --bg-secondary: var(--card);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --accent-primary: var(--accent);
+  --accent-secondary: var(--accent);
 }
 
 * {
@@ -74,6 +82,298 @@ body {
   place-items: center;
 }
 
+/* Config Modal Styles */
+.config-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.config-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.config-content {
+  position: relative;
+  background: var(--bg-primary);
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow: hidden;
+  z-index: 1001;
+}
+
+.config-header {
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.config-header h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.config-body {
+  padding: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 0.75rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: var(--bg-primary);
+}
+
+.start-button {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin-top: 1rem;
+}
+
+.start-button:hover {
+  background: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.start-button:active {
+  transform: translateY(0);
+}
+
+/* Settings button */
+.settings-toggle {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-right: 0.5rem;
+}
+
+.settings-toggle:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* Settings popup */
+.settings-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.settings-content {
+  background: var(--bg-primary);
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.settings-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: var(--bg-secondary);
+}
+
+.settings-body {
+  padding: 1.5rem;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.setting-label {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.setting-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Toggle switch */
+.toggle-switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+}
+
+.toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-secondary);
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle-input:checked+.toggle-slider {
+  background-color: var(--accent-primary);
+}
+
+.toggle-input:checked+.toggle-slider:before {
+  transform: translateX(24px);
+}
+
+/* Hard mode input section */
+.input-section {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
+  margin: 2rem auto 0;
+}
+
+.answer-input {
+  flex: 1;
+  padding: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 0.75rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  transition: border-color 0.2s ease;
+}
+
+.answer-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.submit-button {
+  padding: 1rem 1.5rem;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submit-button:hover {
+  background: var(--accent-secondary);
+}
+
+.submit-button:disabled {
+  background: var(--bg-secondary);
+  cursor: not-allowed;
+}
+
+.hidden {
+  display: none !important;
+}
+
 /* Prompt (big square) */
 .prompt {
   padding: calc(var(--gap) * 0.5);
@@ -100,7 +400,7 @@ body {
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease, transform 200ms ease;
-  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25));
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.25));
 }
 
 /* Make the arrow icon larger */
@@ -113,7 +413,8 @@ body {
 .prompt.wrong .next-arrow {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
-  color: #ffffff; /* better contrast on green background */
+  color: #ffffff;
+  /* better contrast on green background */
 }
 
 /* Make the arrow much larger and bolder */
