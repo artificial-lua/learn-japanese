@@ -37,6 +37,13 @@
                             <option value="typing">직접 입력</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="reveal-answers">정답 공개</label>
+                        <label class="toggle-switch" aria-label="정답 공개">
+                            <input id="reveal-answers" class="toggle-input" type="checkbox" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                     <button type="submit" class="start-button">시작하기</button>
                 </form>
             </div>
@@ -54,6 +61,7 @@
         <!-- 상단: 문제용 큰 정사각형 카드 -->
         <button class="prompt card square" id="prompt" type="button" aria-label="문제">
             <span class="prompt-text" id="question-char" aria-live="polite">준비</span>
+            <div id="answer-hint" class="answer-hint" role="status" aria-live="polite"></div>
             <!-- Appears after a correct answer -->
             <span class="next-arrow" aria-hidden="true" title="다음">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">

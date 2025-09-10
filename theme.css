@@ -374,6 +374,21 @@ body {
   display: none !important;
 }
 
+/* Typing feedback text below input */
+/* Small correct-answer hint inside prompt */
+.prompt .answer-hint {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: clamp(10px, 2.5vmin, 18px);
+  font-size: clamp(12px, 2.6vmin, 18px);
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+}
+
 /* Prompt (big square) */
 .prompt {
   padding: calc(var(--gap) * 0.5);

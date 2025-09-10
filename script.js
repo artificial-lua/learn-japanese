@@ -3,6 +3,7 @@
 // Storage keys
 const THEME_KEY = "learnjp-theme";
 const SCRIPT_KEY = "learnjp-script";
+const REVEAL_KEY = "learnjp-reveal-answers"; // boolean stored as 'true' | 'false'
 const INPUT_MODE_KEY = "learnjp-input-mode"; // 'options' | 'typing'
 
 // App-level globals (file-scope)
@@ -681,6 +682,7 @@ function getTimer() { return timerApiGlobal; }
 
 let state = 'loading';
 let advanceArmed = false; // In typing mode, require a second, separate Enter to advance
+let revealAnswers = false; // default off
 
 const promptBox = document.getElementById('prompt');
 const questionChar = document.getElementById('question-char');
@@ -689,6 +691,7 @@ const answerButtons = document.querySelectorAll('.option');
 const optionsSection = document.querySelector('section.options[aria-label="선택지"]');
 const typingSection = document.getElementById('typing-section');
 const typingInput = document.getElementById('typing-input');
+const answerHint = document.getElementById('answer-hint');
 
 let inputMode = 'options';
 function getInputMode() { return inputMode; }
@@ -701,6 +704,7 @@ function applyInputMode(mode) {
         typingInput.value = '';
         setTimeout(() => typingInput.focus({ preventScroll: true }), 0);
     }
+    if (answerHint) answerHint.textContent = '';
 }
 // Stats bar elements
 const accFillEl = document.getElementById('accuracy-fill');
@@ -1025,16 +1029,21 @@ function answerEvent(input) {
             promptBox.classList.add('correct');
             history.correctAnswers.push(true);
             history.times.push(timerApiGlobal.getTime());
+            if (inputMode === 'typing' && answerHint) {
+                answerHint.textContent = '';
+            }
         } else {
             if (inputMode === 'options') {
                 input.classList.remove('select');
             }
-            answerButtons.forEach((b) => {
-                const buttonSound = b.textContent.replaceAll('\n', '').trim();
-                if (correctSound.includes(buttonSound)) {
-                    b.classList.add('correct');
-                }
-            });
+            if (revealAnswers) {
+                answerButtons.forEach((b) => {
+                    const buttonSound = b.textContent.replaceAll('\n', '').trim();
+                    if (correctSound.includes(buttonSound)) {
+                        b.classList.add('correct');
+                    }
+                });
+            }
             state = 'answered';
             timerApiGlobal.stop();
             promptBox.classList.add('wrong');
@@ -1043,6 +1052,10 @@ function answerEvent(input) {
             }
             history.correctAnswers.push(false);
             history.times.push(timerApiGlobal.getTime());
+            if (inputMode === 'typing' && answerHint) {
+                const answers = Array.isArray(correctSound) ? correctSound.join(', ') : String(correctSound);
+                answerHint.textContent = revealAnswers ? answers : '';
+            }
         }
         if (history.correctAnswers.length > 100) {
             history.correctAnswers.shift();
@@ -1113,6 +1126,7 @@ function getRandomQuestion() {
     );
     timerApiGlobal.reset();
     timerApiGlobal.start();
+    if (answerHint) answerHint.textContent = '';
 }
 
 promptBox.addEventListener('click', () => {
@@ -1135,6 +1149,7 @@ function ready() {
     questionChar.textContent = '준비';
     timerApiGlobal.stop();
     timerApiGlobal.reset();
+    if (answerHint) answerHint.textContent = '';
 }
 
 // ===== Boot =====
@@ -1168,6 +1183,12 @@ function boot() {
     if (storedScript === 'hiragana' || storedScript === 'katakana') {
         currentScriptMode = storedScript;
     }
+    var storedReveal = storage.getItem(REVEAL_KEY);
+    if (storedReveal === 'true' || storedReveal === 'false') {
+        revealAnswers = (storedReveal === 'true');
+    } else {
+        try { storage.setItem(REVEAL_KEY, String(revealAnswers)); } catch (_) { }
+    }
 
     // Settings modal wiring
     (function initSettingsModal() {
@@ -1179,6 +1200,7 @@ function boot() {
         var scriptSel = doc.getElementById('script');
         var themeSel = doc.getElementById('theme');
         var inputModeSel = doc.getElementById('input-mode');
+        var revealChk = doc.getElementById('reveal-answers');
 
         function open() { modal.classList.remove('hidden'); }
         function close() { modal.classList.add('hidden'); }
@@ -1197,6 +1219,7 @@ function boot() {
             if (storedMode !== 'options' && storedMode !== 'typing') storedMode = 'options';
             if (inputModeSel) inputModeSel.value = storedMode;
             applyInputMode(storedMode);
+            if (revealChk) revealChk.checked = !!revealAnswers;
         } catch (_) { }
 
         if (form) {
@@ -1217,6 +1240,11 @@ function boot() {
                     if (selectedMode === 'options' || selectedMode === 'typing') {
                         storage.setItem(INPUT_MODE_KEY, selectedMode);
                         applyInputMode(selectedMode);
+                    }
+                    if (revealChk) {
+                        revealAnswers = !!revealChk.checked;
+                        storage.setItem(REVEAL_KEY, String(revealAnswers));
+                        if (!revealAnswers && answerHint) answerHint.textContent = '';
                     }
                 } catch (_) { }
                 close();
