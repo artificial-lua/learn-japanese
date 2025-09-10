@@ -981,93 +981,87 @@ function clearAnswerButtons() {
 function answerEvent(input) {
     return (e) => {
         e.preventDefault();
-        if (inputMode === 'options') {
-            const selected = input.textContent.replaceAll('\n', '').trim();
-            const currentStorage = ganaStorage[currentScriptMode];
-            const correctAnswer = questionChar.textContent
-            const correctSound = currentStorage.gana[correctAnswer];
+        let correctSound
+        let selected = ''
+        const currentStorage = ganaStorage[currentScriptMode];
+        switch (inputMode) {
+            case 'options':
+                selected = input.textContent.replaceAll('\n', '').trim();
+                const correctAnswer = questionChar.textContent
+                correctSound = currentStorage.gana[correctAnswer];
+                break;
+            case 'typing':
+                // input is text
+                switch (state) {
+                    case 'question':
+                        selected = typingInput.value.replaceAll('\n', '').trim();
+                        if (!selected) return;
+                        correctSound = currentStorage.gana[questionChar.textContent];
+                        if (!advanceArmed) {
+                            // First Enter press, mark and wait for second to advance
+                            advanceArmed = true;
+                            return;
+                        }
+                        advanceArmed = false;
+                        typingInput.value = '';
+                        typingInput.classList.remove('select', 'correct', 'wrong');
+                        break;
+                    case 'ready':
+                    case 'answered':
+                        getRandomQuestion();
+                        return
+                        break;
+                }
+        }
 
-            if (state !== 'question') return;
-
-            // if (btn.classList.contains('select')) {
-            if (correctSound.includes(selected)) {
+        // if (btn.classList.contains('select')) {
+        if (correctSound.includes(selected)) {
+            if (inputMode === 'options') {
                 input.classList.remove('select');
                 input.classList.add('correct');
-                state = 'answered';
-                timerApiGlobal.stop();
-                promptBox.classList.add('correct');
-                history.correctAnswers.push(true);
-                history.times.push(timerApiGlobal.getTime());
-            } else {
+            }
+            state = 'answered';
+            timerApiGlobal.stop();
+            promptBox.classList.add('correct');
+            history.correctAnswers.push(true);
+            history.times.push(timerApiGlobal.getTime());
+        } else {
+            if (inputMode === 'options') {
                 input.classList.remove('select');
-                answerButtons.forEach((b) => {
-                    const buttonSound = b.textContent.replaceAll('\n', '').trim();
-                    if (correctSound.includes(buttonSound)) {
-                        b.classList.add('correct');
-                    }
-                });
-                state = 'answered';
-                timerApiGlobal.stop();
-                promptBox.classList.add('wrong');
+            }
+            answerButtons.forEach((b) => {
+                const buttonSound = b.textContent.replaceAll('\n', '').trim();
+                if (correctSound.includes(buttonSound)) {
+                    b.classList.add('correct');
+                }
+            });
+            state = 'answered';
+            timerApiGlobal.stop();
+            promptBox.classList.add('wrong');
+            if (inputMode === 'options') {
                 input.classList.add('wrong');
-                history.correctAnswers.push(false);
-                history.times.push(timerApiGlobal.getTime());
             }
-            if (history.correctAnswers.length > 100) {
-                history.correctAnswers.shift();
-                history.times.shift();
-            }
-            window.localStorage.setItem('learnjp-history', JSON.stringify(history));
-            console.log('History:', history);
-            updateStatsBars();
+            history.correctAnswers.push(false);
+            history.times.push(timerApiGlobal.getTime());
         }
-        // else if (inputMode === 'typing') {
-        //     // is input not enter, use default action
-        //     if (e.key !== 'Enter') {
-        //         // If Escape is pressed, clear the input
-        //         if (e.key === 'Escape' && typingInput) {
-        //             typingInput.value = '';
-        //         }
-        //         return;
-        //     };
-        //     if (state === 'question') {
-        //         const answer = input.value.replaceAll('\n', '').trim();
-        //         const currentStorage = ganaStorage[currentScriptMode];
-        //         const correctAnswer = questionChar.textContent
-        //         const correctSound = currentStorage.gana[correctAnswer];
-
-        //         if (correctSound.includes(answer)) {
-        //             state = 'answered';
-        //             timerApiGlobal.stop();
-        //             promptBox.classList.add('correct');
-        //             history.correctAnswers.push(true);
-        //             history.times.push(timerApiGlobal.getTime());
-        //         }
-        //         else {
-        //             state = 'answered';
-        //             timerApiGlobal.stop();
-        //             promptBox.classList.add('wrong');
-        //             history.correctAnswers.push(false);
-        //             history.times.push(timerApiGlobal.getTime());
-        //         }
-        //         if (history.correctAnswers.length > 100) {
-        //             history.correctAnswers.shift();
-        //             history.times.shift();
-        //         }
-        //         window.localStorage.setItem('learnjp-history', JSON.stringify(history));
-        //         console.log('History:', history);
-        //         updateStatsBars();
-        //         advanceArmed = true;
-        //     } else if (state === 'answered' && advanceArmed) {
-        //         getRandomQuestion();
-        //         advanceArmed = false;
-        //     }
-        // }
+        if (history.correctAnswers.length > 100) {
+            history.correctAnswers.shift();
+            history.times.shift();
+        }
+        window.localStorage.setItem('learnjp-history', JSON.stringify(history));
+        console.log('History:', history);
+        updateStatsBars();
     }
 }
 
 answerButtons.forEach((btn) => {
     btn.addEventListener('click', answerEvent(btn));
+});
+
+typingInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        answerEvent(typingInput)(e);
+    }
 });
 
 // Set option texts to 1, 2, 3, 4 and expose helper
