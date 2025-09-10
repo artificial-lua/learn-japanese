@@ -8,31 +8,51 @@
     <script src="script.js" defer></script>
 </head>
 <body>
+    <div id="config" class="config-modal hidden">
+        <div class="config-overlay"></div>
+        <div id="config-window" class="config-content">
+            <div class="config-header">
+                <h1>게임 설정</h1>
+            </div>
+            <div class="config-body">
+                <form id="config-form">
+                    <div class="form-group">
+                        <label for="script">문자 세트:</label>
+                        <select id="script" name="script">
+                            <option value="hiragana">히라가나</option>
+                            <option value="katakana">가타카나</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="theme">테마:</label>
+                        <select id="theme" name="theme">
+                            <option value="dark">다크</option>
+                            <option value="light">라이트</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-mode">입력 모드:</label>
+                        <select id="input-mode" name="input-mode">
+                            <option value="options">선택지</option>
+                            <option value="typing">직접 입력</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="start-button">시작하기</button>
+                </form>
+            </div>
+        </div>
+    </div>
     <header class="topbar">
         <div class="topbar-wrap">
             <span id="elapsed" class="timer" aria-live="polite" aria-label="경과 시간">00:00</span>
-            <div class="script-select" role="group" aria-label="문자 세트 선택">
-              <button id="script-toggle" class="script-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="script-label script-toggle" style="padding-left:20px">
-                    <span class="chevron" aria-hidden="true">▾</span>
-                    <span id="script-label" class="visually-hidden">문자 세트</span>
-                    <span class="script-value" data-value="hiragana">히라가나</span>
-                </button>
-                <ul id="script-list" class="script-list" role="listbox" aria-labelledby="script-label" tabindex="-1" hidden>
-                    <li role="option" data-value="hiragana" aria-selected="true" tabindex="-1">히라가나</li>
-                    <li role="option" data-value="katakana" aria-selected="false" tabindex="-1">가타카나</li>
-                </ul>
-            </div>
-            <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="테마 전환">
-                <span class="icon sun" aria-hidden="true">☀️</span>
-                <span class="icon moon" aria-hidden="true">🌙</span>
-                <span class="visually-hidden">Theme</span>
-            </button>
+            <span></span>
+            <button id="settings-toggle" class="settings-toggle" type="button" aria-label="설정 열기">⚙️</button>
         </div>
     </header>
 
     <main class="game" id="app">
         <!-- 상단: 문제용 큰 정사각형 카드 -->
-        <button class="prompt card square" id="prompt" aria-label="문제">
+        <button class="prompt card square" id="prompt" type="button" aria-label="문제">
             <span class="prompt-text" id="question-char" aria-live="polite">준비</span>
             <!-- Appears after a correct answer -->
             <span class="next-arrow" aria-hidden="true" title="다음">
@@ -56,6 +76,12 @@
             <button class="option card square" data-index="3" type="button">
                 <span class="option-text"></span>
             </button>
+        </section>
+
+        <!-- 하단: 직접 입력 모드 -->
+        <section id="typing-section" class="input-section hidden" aria-label="직접 입력">
+            <label for="typing-input" class="visually-hidden">정답 입력</label>
+            <input id="typing-input" class="answer-input" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="정답을 입력하고 Enter를 누르세요" />
         </section>
     </main>
 

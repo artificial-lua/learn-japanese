@@ -3,6 +3,7 @@
 // Storage keys
 const THEME_KEY = "learnjp-theme";
 const SCRIPT_KEY = "learnjp-script";
+const INPUT_MODE_KEY = "learnjp-input-mode"; // 'options' | 'typing'
 
 // App-level globals (file-scope)
 const ganaStorage = {
@@ -659,7 +660,7 @@ ganaStorage.hiragana.gana.length = Object.keys(ganaStorage.hiragana.gana).length
     var kataGana = {};
     Object.keys(hira.gana).forEach(function (key) {
         if (key === 'length') return;
-        console.log(key, hiraToKata(key), hira.gana[key]);
+        // console.log(key, hiraToKata(key), hira.gana[key]);
         var kataKey = hiraToKata(key);
         kataGana[kataKey] = hira.gana[key]?.slice();
     });
@@ -679,11 +680,28 @@ let timerApiGlobal = null;
 function getTimer() { return timerApiGlobal; }
 
 let state = 'loading';
+let advanceArmed = false; // In typing mode, require a second, separate Enter to advance
 
 const promptBox = document.getElementById('prompt');
 const questionChar = document.getElementById('question-char');
 const answerBoxes = document.querySelectorAll('.options .option .option-text');
 const answerButtons = document.querySelectorAll('.option');
+const optionsSection = document.querySelector('section.options[aria-label="선택지"]');
+const typingSection = document.getElementById('typing-section');
+const typingInput = document.getElementById('typing-input');
+
+let inputMode = 'options';
+function getInputMode() { return inputMode; }
+
+function applyInputMode(mode) {
+    inputMode = (mode === 'typing') ? 'typing' : 'options';
+    if (optionsSection) optionsSection.classList.toggle('hidden', inputMode !== 'options');
+    if (typingSection) typingSection.classList.toggle('hidden', inputMode !== 'typing');
+    if (inputMode === 'typing' && typingInput) {
+        typingInput.value = '';
+        setTimeout(() => typingInput.focus({ preventScroll: true }), 0);
+    }
+}
 // Stats bar elements
 const accFillEl = document.getElementById('accuracy-fill');
 const accTextEl = document.getElementById('accuracy-text');
@@ -706,7 +724,7 @@ if (window.localStorage.getItem('learnjp-history')) {
         // Ignore
     }
 }
-console.log('Loaded history:', history);
+// console.log('Loaded history:', history);
 
 function updateStatsBars() {
     try {
@@ -960,27 +978,57 @@ function clearAnswerButtons() {
     answerButtons.forEach((b) => b.classList.remove('select', 'correct', 'wrong'))
 }
 
-answerButtons.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+function answerEvent(input) {
+    return (e) => {
         e.preventDefault();
-        const selected = btn.textContent.replaceAll('\n', '').trim();;
+        let correctSound
+        let selected = ''
         const currentStorage = ganaStorage[currentScriptMode];
-        const correctAnswer = questionChar.textContent
-        const correctSound = currentStorage.gana[correctAnswer];
-
-        if (state !== 'question') return;
+        switch (inputMode) {
+            case 'options':
+                selected = input.textContent.replaceAll('\n', '').trim();
+                const correctAnswer = questionChar.textContent
+                correctSound = currentStorage.gana[correctAnswer];
+                break;
+            case 'typing':
+                // input is text
+                switch (state) {
+                    case 'question':
+                        selected = typingInput.value.replaceAll('\n', '').trim();
+                        if (!selected) return;
+                        correctSound = currentStorage.gana[questionChar.textContent];
+                        if (!advanceArmed) {
+                            // First Enter press, mark and wait for second to advance
+                            advanceArmed = true;
+                            return;
+                        }
+                        advanceArmed = false;
+                        typingInput.value = '';
+                        typingInput.classList.remove('select', 'correct', 'wrong');
+                        break;
+                    case 'ready':
+                    case 'answered':
+                        getRandomQuestion();
+                        return
+                        break;
+                }
+        }
 
         // if (btn.classList.contains('select')) {
         if (correctSound.includes(selected)) {
-            btn.classList.remove('select');
-            btn.classList.add('correct');
+            if (inputMode === 'options') {
+                input.classList.remove('select');
+                input.classList.add('correct');
+            }
             state = 'answered';
             timerApiGlobal.stop();
             promptBox.classList.add('correct');
             history.correctAnswers.push(true);
             history.times.push(timerApiGlobal.getTime());
         } else {
-            btn.classList.remove('select');
+            if (inputMode === 'options') {
+                input.classList.remove('select');
+            }
             answerButtons.forEach((b) => {
                 const buttonSound = b.textContent.replaceAll('\n', '').trim();
                 if (correctSound.includes(buttonSound)) {
@@ -990,7 +1038,9 @@ answerButtons.forEach((btn) => {
             state = 'answered';
             timerApiGlobal.stop();
             promptBox.classList.add('wrong');
-            btn.classList.add('wrong');
+            if (inputMode === 'options') {
+                input.classList.add('wrong');
+            }
             history.correctAnswers.push(false);
             history.times.push(timerApiGlobal.getTime());
         }
@@ -999,13 +1049,19 @@ answerButtons.forEach((btn) => {
             history.times.shift();
         }
         window.localStorage.setItem('learnjp-history', JSON.stringify(history));
-        console.log('History:', history);
+        // console.log('History:', history);
         updateStatsBars();
-        // } else {
-        //     clearAnswerButtons();
-        //     btn.classList.add('select');
-        // }
-    });
+    }
+}
+
+answerButtons.forEach((btn) => {
+    btn.addEventListener('click', answerEvent(btn));
+});
+
+typingInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        answerEvent(typingInput)(e);
+    }
 });
 
 // Set option texts to 1, 2, 3, 4 and expose helper
@@ -1087,9 +1143,14 @@ function boot() {
     var win = window;
     var storage = window.localStorage;
 
-    // Theme
+    // Theme (moved into settings modal)
     var mm = function (q) { return (win.matchMedia && win.matchMedia(q).matches); };
-    initThemeToggle(doc, storage, mm, THEME_KEY);
+    var root = doc.documentElement;
+    var storedTheme = storage.getItem(THEME_KEY);
+    var initialTheme = (storedTheme === 'light' || storedTheme === 'dark')
+        ? storedTheme
+        : (mm('(prefers-color-scheme: light)') ? 'light' : 'dark');
+    applyTheme(root, null, initialTheme);
 
     // Timer
     var timerApi = createTimer(
@@ -1102,17 +1163,67 @@ function boot() {
         timerApiGlobal = timerApi;
     }
 
-    // Dropdown
-    initScriptDropdown(
-        doc.querySelector('.script-select'),
-        doc.getElementById('script-toggle'),
-        doc.getElementById('script-list'),
-        doc.querySelector('.script-select .script-value'),
-        storage,
-        SCRIPT_KEY,
-        win,
-        doc
-    );
+    // Script mode init from storage (moved to settings)
+    var storedScript = storage.getItem(SCRIPT_KEY);
+    if (storedScript === 'hiragana' || storedScript === 'katakana') {
+        currentScriptMode = storedScript;
+    }
+
+    // Settings modal wiring
+    (function initSettingsModal() {
+        var openBtn = doc.getElementById('settings-toggle');
+        var modal = doc.getElementById('config');
+        if (!modal || !openBtn) return;
+        var overlay = modal.querySelector('.config-overlay');
+        var form = doc.getElementById('config-form');
+        var scriptSel = doc.getElementById('script');
+        var themeSel = doc.getElementById('theme');
+        var inputModeSel = doc.getElementById('input-mode');
+
+        function open() { modal.classList.remove('hidden'); }
+        function close() { modal.classList.add('hidden'); }
+
+        openBtn.addEventListener('click', open);
+        if (overlay) overlay.addEventListener('click', close);
+        doc.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+        });
+
+        // Initialize form values
+        try {
+            if (scriptSel) scriptSel.value = currentScriptMode;
+            if (themeSel) themeSel.value = (root.dataset.theme === 'light') ? 'light' : 'dark';
+            var storedMode = storage.getItem(INPUT_MODE_KEY);
+            if (storedMode !== 'options' && storedMode !== 'typing') storedMode = 'options';
+            if (inputModeSel) inputModeSel.value = storedMode;
+            applyInputMode(storedMode);
+        } catch (_) { }
+
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                try {
+                    var selectedScript = scriptSel ? String(scriptSel.value) : 'hiragana';
+                    var selectedTheme = themeSel ? String(themeSel.value) : initialTheme;
+                    var selectedMode = inputModeSel ? String(inputModeSel.value) : 'options';
+                    if (selectedScript === 'hiragana' || selectedScript === 'katakana') {
+                        currentScriptMode = selectedScript;
+                        storage.setItem(SCRIPT_KEY, currentScriptMode);
+                    }
+                    if (selectedTheme === 'light' || selectedTheme === 'dark') {
+                        applyTheme(root, null, selectedTheme);
+                        storage.setItem(THEME_KEY, selectedTheme);
+                    }
+                    if (selectedMode === 'options' || selectedMode === 'typing') {
+                        storage.setItem(INPUT_MODE_KEY, selectedMode);
+                        applyInputMode(selectedMode);
+                    }
+                } catch (_) { }
+                close();
+                ready();
+            });
+        }
+    })();
 
     ready()
     // Initialize stats bars from stored history
