@@ -660,7 +660,7 @@ ganaStorage.hiragana.gana.length = Object.keys(ganaStorage.hiragana.gana).length
     var kataGana = {};
     Object.keys(hira.gana).forEach(function (key) {
         if (key === 'length') return;
-        console.log(key, hiraToKata(key), hira.gana[key]);
+        // console.log(key, hiraToKata(key), hira.gana[key]);
         var kataKey = hiraToKata(key);
         kataGana[kataKey] = hira.gana[key]?.slice();
     });
@@ -724,7 +724,7 @@ if (window.localStorage.getItem('learnjp-history')) {
         // Ignore
     }
 }
-console.log('Loaded history:', history);
+// console.log('Loaded history:', history);
 
 function updateStatsBars() {
     try {
@@ -1049,7 +1049,7 @@ function answerEvent(input) {
             history.times.shift();
         }
         window.localStorage.setItem('learnjp-history', JSON.stringify(history));
-        console.log('History:', history);
+        // console.log('History:', history);
         updateStatsBars();
     }
 }
